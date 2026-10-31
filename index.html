@@ -7,9 +7,7 @@
 <title>Dedrix</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 :root {
     color-scheme: dark;
@@ -90,13 +88,8 @@ header {
     font-family: inherit;
 }
 
-.tool:active {
-    background: #292e37;
-}
-
-.tool.active {
-    color: var(--green);
-}
+.tool:active { background: #292e37; }
+.tool.active { color: var(--green); }
 
 main {
     flex: 1;
@@ -122,25 +115,11 @@ main {
     min-height: 21px;
 }
 
-.prompt {
-    color: var(--green);
-}
-
-.command {
-    color: #e0e3e9;
-}
-
-.output {
-    color: #c1c6cf;
-}
-
-.muted {
-    color: var(--muted);
-}
-
-.error {
-    color: #d98c8c;
-}
+.prompt { color: var(--green); }
+.command { color: #e0e3e9; }
+.output { color: #c1c6cf; }
+.muted { color: var(--muted); }
+.error { color: #d98c8c; }
 
 .editor-panel {
     display: none;
@@ -151,9 +130,7 @@ main {
     background: #111419;
 }
 
-.editor-panel.visible {
-    display: flex;
-}
+.editor-panel.visible { display: flex; }
 
 .editor-head {
     height: 34px;
@@ -213,9 +190,7 @@ main {
     caret-color: var(--green);
 }
 
-#commandInput::placeholder {
-    color: #656c78;
-}
+#commandInput::placeholder { color: #656c78; }
 
 .send {
     border: 0;
@@ -246,14 +221,10 @@ main {
     font-size: 11px;
 }
 
-.key:active {
-    background: #343b46;
-}
+.key:active { background: #343b46; }
 
 @media (max-height: 500px) {
-    .editor-panel {
-        height: 35%;
-    }
+    .editor-panel { height: 35%; }
 }
 </style>
 </head>
@@ -321,6 +292,8 @@ main {
     <button class="key" onclick="insertKey('-')">-</button>
 </div>
 
+<script src="./app.js"></script>
+
 <script>
 const terminal = document.getElementById("terminal");
 const commandInput = document.getElementById("commandInput");
@@ -333,7 +306,7 @@ let historyIndex = 0;
 function addLine(text, type = "output") {
     const line = document.createElement("div");
     line.className = "line " + type;
-    line.textContent = text;
+    line.textContent = String(text);
     terminal.appendChild(line);
     terminal.scrollTop = terminal.scrollHeight;
 }
@@ -341,7 +314,7 @@ function addLine(text, type = "output") {
 function addCommand(text) {
     const line = document.createElement("div");
     line.className = "line";
-    
+
     const prompt = document.createElement("span");
     prompt.className = "prompt";
     prompt.textContent = "~ $ ";
@@ -352,6 +325,7 @@ function addCommand(text) {
 
     line.append(prompt, command);
     terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
 }
 
 function submitCommand() {
@@ -363,22 +337,40 @@ function submitCommand() {
     historyIndex = history.length;
     commandInput.value = "";
 
-    executeCommand(value);
+    if (["clear", "help", "version", "edit", "run"].includes(value)) {
+        executeSystemCommand(value);
+        return;
+    }
+
+    try {
+        if (!window.Dedrix) {
+            throw new Error("Интерпретатор Dedrix не загружен");
+        }
+        window.Dedrix.execute(value);
+    } catch (error) {
+        addLine(error.message, "error");
+    }
 }
 
-function executeCommand(command) {
+function executeSystemCommand(command) {
     if (command === "clear") {
         clearTerminal();
         return;
     }
 
     if (command === "help") {
-        addLine("Доступные команды:");
-        addLine("help     — список команд");
+        addLine("Команды терминала:");
+        addLine("help     — справка");
         addLine("clear    — очистить терминал");
         addLine("version  — версия Dedrix");
         addLine("edit     — открыть редактор");
-        addLine("run      — выполнить код из редактора");
+        addLine("run      — выполнить код");
+        addLine("");
+        addLine("Язык Dedrix:");
+        addLine('txt("текст") — вывести текст');
+        addLine("txt(123)    — вывести число");
+        addLine("name = value — создать переменную");
+        addLine("txt(name)   — вывести переменную");
         return;
     }
 
@@ -394,16 +386,7 @@ function executeCommand(command) {
 
     if (command === "run") {
         runEditor();
-        return;
     }
-
-    const match = command.match(/^print\(["'](.*)["']\)$/);
-    if (match) {
-        addLine(match[1]);
-        return;
-    }
-
-    addLine("Неизвестная команда: " + command, "error");
 }
 
 function clearTerminal() {
@@ -427,23 +410,15 @@ function toggleEditor(forceOpen = false) {
 
 function runEditor() {
     const source = editor.value;
-    const lines = source.split("\n");
 
     addLine("Запуск main.dedrix", "muted");
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        const match = line.match(/^print\(["'](.*)["']\)$/);
-
-        if (match) {
-            addLine(match[1]);
-        } else {
-            addLine("Строка " + (i + 1) + ": неизвестная команда", "error");
-        }
+    if (!window.Dedrix) {
+        addLine("Интерпретатор Dedrix не загружен", "error");
+        return;
     }
 
+    window.Dedrix.run(source);
     addLine("Выполнение завершено", "muted");
 }
 
@@ -456,22 +431,30 @@ function insertKey(key) {
     }
 
     if (key === "TAB") {
-        commandInput.value += "    ";
+        const start = commandInput.selectionStart;
+        const end = commandInput.selectionEnd;
+        const value = commandInput.value;
+
+        commandInput.value =
+            value.slice(0, start) + "    " + value.slice(end);
+
+        commandInput.setSelectionRange(start + 4, start + 4);
         return;
     }
 
-    if (["CTRL", "ALT"].includes(key)) return;
+    if (["CTRL", "ALT", "↑", "↓", "←", "→"].includes(key)) return;
 
     const start = commandInput.selectionStart;
     const end = commandInput.selectionEnd;
     const value = commandInput.value;
 
-    if (key === "←" || key === "→" || key === "↑" || key === "↓") {
-        return;
-    }
+    commandInput.value =
+        value.slice(0, start) + key + value.slice(end);
 
-    commandInput.value = value.slice(0, start) + key + value.slice(end);
-    commandInput.setSelectionRange(start + key.length, start + key.length);
+    commandInput.setSelectionRange(
+        start + key.length,
+        start + key.length
+    );
 }
 
 commandInput.addEventListener("keydown", event => {
@@ -481,6 +464,7 @@ commandInput.addEventListener("keydown", event => {
 
     if (event.key === "ArrowUp") {
         event.preventDefault();
+
         if (historyIndex > 0) {
             historyIndex--;
             commandInput.value = history[historyIndex];
@@ -489,6 +473,7 @@ commandInput.addEventListener("keydown", event => {
 
     if (event.key === "ArrowDown") {
         event.preventDefault();
+
         if (historyIndex < history.length - 1) {
             historyIndex++;
             commandInput.value = history[historyIndex];
@@ -500,17 +485,18 @@ commandInput.addEventListener("keydown", event => {
 
     if (event.key === "Tab") {
         event.preventDefault();
+
         const start = commandInput.selectionStart;
+        const end = commandInput.selectionEnd;
+
         commandInput.value =
             commandInput.value.slice(0, start) +
             "    " +
-            commandInput.value.slice(commandInput.selectionEnd);
+            commandInput.value.slice(end);
+
         commandInput.setSelectionRange(start + 4, start + 4);
     }
 });
-
-addLine("Dedrix terminal", "muted");
-addLine(" ");
 </script>
 
 </body>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101216">
 <title>Dedrix</title>
 
 <style>
@@ -10,194 +11,248 @@
     box-sizing: border-box;
 }
 
-body {
+:root {
+    color-scheme: dark;
+    --bg: #101216;
+    --panel: #171a20;
+    --line: #292d35;
+    --text: #d5d8df;
+    --muted: #858b96;
+    --green: #a3c9a5;
+    --blue: #91b9dc;
+}
+
+html, body {
     margin: 0;
-    background: #0b0d12;
-    color: #e8eaf0;
-    font-family: Arial, sans-serif;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Roboto", "Arial", sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 header {
-    height: 62px;
+    height: 43px;
+    min-height: 43px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 18px;
-    background: #11141c;
-    border-bottom: 1px solid #252936;
+    padding: 0 13px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
 }
 
-.logo {
-    font-size: 23px;
-    font-weight: bold;
-    letter-spacing: 1px;
+.brand {
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 1.8px;
 }
 
-.version {
-    color: #858da0;
-    font-size: 12px;
-}
-
-.layout {
+.header-right {
     display: flex;
-    min-height: calc(100vh - 62px);
+    align-items: center;
+    gap: 13px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .5px;
 }
 
-.sidebar {
-    width: 190px;
-    background: #11141c;
-    border-right: 1px solid #252936;
-    padding: 15px 10px;
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
 }
 
-.nav-button {
-    width: 100%;
-    padding: 13px;
-    margin-bottom: 5px;
+.toolbar {
+    min-height: 39px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    background: #13161b;
+    border-bottom: 1px solid var(--line);
+}
+
+.tool {
+    border: 0;
     background: transparent;
-    border: none;
-    border-radius: 7px;
-    color: #aeb5c5;
-    text-align: left;
-    font-size: 14px;
-    cursor: pointer;
+    color: #aeb4bf;
+    padding: 7px 10px;
+    font-size: 11px;
+    letter-spacing: .7px;
+    font-family: inherit;
 }
 
-.nav-button:hover,
-.nav-button.active {
-    background: #202738;
-    color: white;
+.tool:active {
+    background: #292e37;
+}
+
+.tool.active {
+    color: var(--green);
 }
 
 main {
     flex: 1;
-    padding: 20px;
-    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.page {
-    display: none;
-}
-
-.page.active {
-    display: block;
-}
-
-h2 {
-    margin-top: 0;
-    font-size: 21px;
-}
-
-.panel {
-    background: #121722;
-    border: 1px solid #272e3d;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.panel-title {
-    font-size: 14px;
-    color: #aeb5c5;
-    margin-bottom: 12px;
-}
-
-.editor {
-    width: 100%;
-    min-height: 270px;
-    resize: vertical;
-    background: #090c12;
-    color: #d9e2f2;
-    border: 1px solid #293347;
-    border-radius: 7px;
-    padding: 15px;
-    font-family: monospace;
-    font-size: 14px;
-    line-height: 1.7;
-    outline: none;
-}
-
-.editor:focus {
-    border-color: #637fca;
-}
-
-button.action {
-    padding: 10px 18px;
-    background: #526fd0;
-    color: white;
-    border: none;
-    border-radius: 7px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-button.action:hover {
-    background: #6482e5;
-}
-
-button.secondary {
-    background: #252d3d;
-}
-
-button.secondary:hover {
-    background: #333e53;
-}
-
-.output {
-    min-height: 100px;
-    background: #090c12;
-    border-radius: 7px;
-    padding: 13px;
-    color: #9ecca8;
-    font-family: monospace;
-    white-space: pre-wrap;
+.terminal {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 13px 12px 8px;
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    letter-spacing: .15px;
     overflow-wrap: anywhere;
 }
 
-.status {
-    color: #d8b56b;
-    font-size: 13px;
+.line {
+    white-space: pre-wrap;
+    min-height: 21px;
 }
 
-.info {
-    color: #929bad;
+.prompt {
+    color: var(--green);
+}
+
+.command {
+    color: #e0e3e9;
+}
+
+.output {
+    color: #c1c6cf;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.error {
+    color: #d98c8c;
+}
+
+.editor-panel {
+    display: none;
+    flex-direction: column;
+    height: 43%;
+    min-height: 150px;
+    border-top: 1px solid var(--line);
+    background: #111419;
+}
+
+.editor-panel.visible {
+    display: flex;
+}
+
+.editor-head {
+    height: 34px;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 11px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .7px;
+    border-bottom: 1px solid var(--line);
+}
+
+.editor {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    resize: none;
+    border: 0;
+    outline: none;
+    padding: 11px;
+    background: #111419;
+    color: #d5dce6;
+    font-family: "Roboto Mono", "Courier New", monospace;
     font-size: 13px;
     line-height: 1.6;
+    tab-size: 4;
 }
 
-input {
-    width: 100%;
-    padding: 12px;
-    background: #090c12;
-    color: white;
-    border: 1px solid #293347;
-    border-radius: 7px;
-    margin: 8px 0;
+.input-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: #171a20;
+    border-top: 1px solid var(--line);
 }
 
-@media(max-width: 600px) {
-    .layout {
-        display: block;
-    }
+.input-prompt {
+    color: var(--green);
+    font-family: monospace;
+    font-size: 14px;
+    white-space: nowrap;
+}
 
-    .sidebar {
-        width: 100%;
-        display: flex;
-        overflow-x: auto;
-        padding: 8px;
-        border-right: none;
-        border-bottom: 1px solid #252936;
-    }
+#commandInput {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #e0e3e9;
+    font-family: "Roboto Mono", "Courier New", monospace;
+    font-size: 14px;
+    padding: 5px 0;
+    caret-color: var(--green);
+}
 
-    .nav-button {
-        width: auto;
-        min-width: max-content;
-        margin: 0 3px;
-        padding: 11px;
-    }
+#commandInput::placeholder {
+    color: #656c78;
+}
 
-    main {
-        padding: 13px;
+.send {
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    font-size: 17px;
+    padding: 5px 8px;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 5px 7px;
+    background: #171a20;
+    border-top: 1px solid var(--line);
+}
+
+.key {
+    flex: 0 0 auto;
+    min-width: 34px;
+    height: 29px;
+    border: 1px solid #343943;
+    border-radius: 4px;
+    background: #20242b;
+    color: #b8bec8;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.key:active {
+    background: #343b46;
+}
+
+@media (max-height: 500px) {
+    .editor-panel {
+        height: 35%;
     }
 }
 </style>
@@ -206,142 +261,257 @@ input {
 <body>
 
 <header>
-    <div class="logo">DEDRIX</div>
-    <div class="version">0.1.0 ALPHA</div>
+    <div class="brand">DEDRIX</div>
+    <div class="header-right">
+        <span>TERMINAL</span>
+        <span class="status-dot"></span>
+    </div>
 </header>
 
-<div class="layout">
+<div class="toolbar">
+    <button class="tool active" id="terminalButton" onclick="showTerminal()">TERMINAL</button>
+    <button class="tool" id="editorButton" onclick="toggleEditor()">EDITOR</button>
+    <button class="tool" onclick="runEditor()">RUN</button>
+    <button class="tool" onclick="clearTerminal()">CLEAR</button>
+</div>
 
-    <nav class="sidebar">
-        <button class="nav-button active" data-page="editor">Editor</button>
-        <button class="nav-button" data-page="bots">Telegram Bots</button>
-        <button class="nav-button" data-page="cloud">Cloud</button>
-        <button class="nav-button" data-page="settings">Settings</button>
-    </nav>
+<main>
+    <div class="terminal" id="terminal"></div>
 
-    <main>
+    <section class="editor-panel" id="editorPanel">
+        <div class="editor-head">
+            <span>main.dedrix</span>
+            <span>EDITOR</span>
+        </div>
+        <textarea
+            class="editor"
+            id="code"
+            spellcheck="false"
+            autocapitalize="off"
+            autocomplete="off"
+            autocorrect="off"
+            placeholder="Код Dedrix..."
+        ></textarea>
+    </section>
+</main>
 
-        <section class="page active" id="editor">
-            <h2>Редактор</h2>
+<div class="input-area">
+    <span class="input-prompt">~ $</span>
+    <input
+        id="commandInput"
+        type="text"
+        placeholder="Введите команду"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+    >
+    <button class="send" onclick="submitCommand()">↵</button>
+</div>
 
-            <div class="panel">
-                <div class="panel-title">main.dedrix</div>
-
-                <textarea class="editor" id="code" spellcheck="false">print("Hello from Dedrix")
-
-print("My first program")</textarea>
-
-                <button class="action" onclick="runCode()">Run Code</button>
-                <button class="action secondary" onclick="clearOutput()">Clear</button>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">Terminal</div>
-                <div class="output" id="output">Dedrix Terminal 0.1.0
-Ready.</div>
-            </div>
-
-            <p class="info">
-                Сейчас работает демонстрационный запуск print().
-                Полноценный интерпретатор будет добавлен позже.
-            </p>
-        </section>
-
-        <section class="page" id="bots">
-            <h2>Telegram Bots</h2>
-
-            <div class="panel">
-                <div class="panel-title">Управление ботами</div>
-                <p class="status">Cloud connection not configured</p>
-                <p class="info">
-                    Здесь появится создание Telegram-ботов,
-                    управление токенами и запуск через Cloudflare.
-                </p>
-                <button class="action" onclick="alert('Telegram integration is not ready yet.')">
-                    Add Bot
-                </button>
-            </div>
-        </section>
-
-        <section class="page" id="cloud">
-            <h2>Cloud</h2>
-
-            <div class="panel">
-                <div class="panel-title">Cloudflare</div>
-                <p class="status">Not connected</p>
-                <p class="info">
-                    Облачное управление Dedrix.
-                    Здесь появятся состояние Workers,
-                    публикация программ и управление проектами.
-                </p>
-            </div>
-        </section>
-
-        <section class="page" id="settings">
-            <h2>Settings</h2>
-
-            <div class="panel">
-                <div class="panel-title">О приложении</div>
-                <p>Dedrix Programming Language</p>
-                <p class="info">Version: 0.1.0 Alpha</p>
-                <p class="info">Platform: Web / Android</p>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">Проект</div>
-                <p class="info">
-                    Dedrix — собственный язык программирования
-                    с поддержкой облачных сервисов.
-                </p>
-            </div>
-        </section>
-
-    </main>
+<div class="keyboard-row">
+    <button class="key" onclick="insertKey('ESC')">ESC</button>
+    <button class="key" onclick="insertKey('TAB')">TAB</button>
+    <button class="key" onclick="insertKey('CTRL')">CTRL</button>
+    <button class="key" onclick="insertKey('ALT')">ALT</button>
+    <button class="key" onclick="insertKey('↑')">↑</button>
+    <button class="key" onclick="insertKey('↓')">↓</button>
+    <button class="key" onclick="insertKey('←')">←</button>
+    <button class="key" onclick="insertKey('→')">→</button>
+    <button class="key" onclick="insertKey('/')">/</button>
+    <button class="key" onclick="insertKey('-')">-</button>
 </div>
 
 <script>
-const navButtons = document.querySelectorAll(".nav-button");
-const pages = document.querySelectorAll(".page");
+const terminal = document.getElementById("terminal");
+const commandInput = document.getElementById("commandInput");
+const editorPanel = document.getElementById("editorPanel");
+const editor = document.getElementById("code");
 
-navButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        navButtons.forEach(item => item.classList.remove("active"));
-        pages.forEach(page => page.classList.remove("active"));
+let history = [];
+let historyIndex = 0;
 
-        button.classList.add("active");
-        document.getElementById(button.dataset.page).classList.add("active");
-    });
-});
+function addLine(text, type = "output") {
+    const line = document.createElement("div");
+    line.className = "line " + type;
+    line.textContent = text;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+}
 
-function runCode() {
-    const source = document.getElementById("code").value;
-    const output = document.getElementById("output");
+function addCommand(text) {
+    const line = document.createElement("div");
+    line.className = "line";
+    
+    const prompt = document.createElement("span");
+    prompt.className = "prompt";
+    prompt.textContent = "~ $ ";
 
+    const command = document.createElement("span");
+    command.className = "command";
+    command.textContent = text;
+
+    line.append(prompt, command);
+    terminal.appendChild(line);
+}
+
+function submitCommand() {
+    const value = commandInput.value.trim();
+    if (!value) return;
+
+    addCommand(value);
+    history.push(value);
+    historyIndex = history.length;
+    commandInput.value = "";
+
+    executeCommand(value);
+}
+
+function executeCommand(command) {
+    if (command === "clear") {
+        clearTerminal();
+        return;
+    }
+
+    if (command === "help") {
+        addLine("Доступные команды:");
+        addLine("help     — список команд");
+        addLine("clear    — очистить терминал");
+        addLine("version  — версия Dedrix");
+        addLine("edit     — открыть редактор");
+        addLine("run      — выполнить код из редактора");
+        return;
+    }
+
+    if (command === "version") {
+        addLine("Dedrix 0.1.0");
+        return;
+    }
+
+    if (command === "edit") {
+        toggleEditor(true);
+        return;
+    }
+
+    if (command === "run") {
+        runEditor();
+        return;
+    }
+
+    const match = command.match(/^print\(["'](.*)["']\)$/);
+    if (match) {
+        addLine(match[1]);
+        return;
+    }
+
+    addLine("Неизвестная команда: " + command, "error");
+}
+
+function clearTerminal() {
+    terminal.innerHTML = "";
+}
+
+function showTerminal() {
+    editorPanel.classList.remove("visible");
+    document.getElementById("editorButton").classList.remove("active");
+    document.getElementById("terminalButton").classList.add("active");
+    commandInput.focus();
+}
+
+function toggleEditor(forceOpen = false) {
+    const open = forceOpen || !editorPanel.classList.contains("visible");
+    editorPanel.classList.toggle("visible", open);
+
+    document.getElementById("editorButton").classList.toggle("active", open);
+    document.getElementById("terminalButton").classList.toggle("active", !open);
+}
+
+function runEditor() {
+    const source = editor.value;
     const lines = source.split("\n");
-    const results = [];
+
+    addLine("Запуск main.dedrix", "muted");
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-
-        if (line === "") continue;
+        if (!line) continue;
 
         const match = line.match(/^print\(["'](.*)["']\)$/);
 
         if (match) {
-            results.push(match[1]);
+            addLine(match[1]);
         } else {
-            results.push("Line " + (i + 1) + ": Unsupported command");
+            addLine("Строка " + (i + 1) + ": неизвестная команда", "error");
         }
     }
 
-    output.textContent = "Dedrix Terminal\n\n" + results.join("\n") +
-        "\n\nProcess finished.";
+    addLine("Выполнение завершено", "muted");
 }
 
-function clearOutput() {
-    document.getElementById("output").textContent = "Terminal cleared.";
+function insertKey(key) {
+    commandInput.focus();
+
+    if (key === "ESC") {
+        commandInput.value = "";
+        return;
+    }
+
+    if (key === "TAB") {
+        commandInput.value += "    ";
+        return;
+    }
+
+    if (["CTRL", "ALT"].includes(key)) return;
+
+    const start = commandInput.selectionStart;
+    const end = commandInput.selectionEnd;
+    const value = commandInput.value;
+
+    if (key === "←" || key === "→" || key === "↑" || key === "↓") {
+        return;
+    }
+
+    commandInput.value = value.slice(0, start) + key + value.slice(end);
+    commandInput.setSelectionRange(start + key.length, start + key.length);
 }
+
+commandInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        submitCommand();
+    }
+
+    if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (historyIndex > 0) {
+            historyIndex--;
+            commandInput.value = history[historyIndex];
+        }
+    }
+
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (historyIndex < history.length - 1) {
+            historyIndex++;
+            commandInput.value = history[historyIndex];
+        } else {
+            historyIndex = history.length;
+            commandInput.value = "";
+        }
+    }
+
+    if (event.key === "Tab") {
+        event.preventDefault();
+        const start = commandInput.selectionStart;
+        commandInput.value =
+            commandInput.value.slice(0, start) +
+            "    " +
+            commandInput.value.slice(commandInput.selectionEnd);
+        commandInput.setSelectionRange(start + 4, start + 4);
+    }
+});
+
+addLine("Dedrix terminal", "muted");
+addLine(" ");
 </script>
 
 </body>
-  </html>
+</html>

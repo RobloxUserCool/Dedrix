@@ -1,0 +1,6 @@
+{
+  "appId": "com.dedrix.app",
+  "appName": "Dedrix",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}

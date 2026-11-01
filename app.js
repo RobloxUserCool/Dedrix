@@ -241,9 +241,91 @@ function fileView() {
     };
 }
 
+/* ---------- сохранение скачанных файлов ---------- */
+
+const DB_NAME = "dedrix";
+const STORE = "files";
+
+function dbOpen() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function saveStored(file) {
+    const db = await dbOpen();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(file, file.name);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+    });
+}
+
+async function loadStored() {
+    try {
+        const db = await dbOpen();
+        const keys = await new Promise((res, rej) => {
+            const r = db.transaction(STORE).objectStore(STORE).getAllKeys();
+            r.onsuccess = () => res(r.result);
+            r.onerror = () => rej(r.error);
+        });
+        const values = await new Promise((res, rej) => {
+            const r = db.transaction(STORE).objectStore(STORE).getAll();
+            r.onsuccess = () => res(r.result);
+            r.onerror = () => rej(r.error);
+        });
+        keys.forEach((key, i) => files.set(key, values[i]));
+    } catch (error) {
+        /* хранилище недоступно — файлы просто не восстановятся */
+    }
+}
+
 /* ---------- загрузка с GitHub ---------- */
 
-async function download(project, version) {
+function base64ToBlob(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes]);
+}
+
+async function getBinary(url) {
+    const http = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp;
+
+    if (http) {
+        const response = await http.request({ url, method: "GET", responseType: "blob" });
+        if (response.status < 200 || response.status >= 300) throw new Error("сервер ответил " + response.status);
+        return base64ToBlob(response.data);
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("сервер ответил " + response.status);
+    return response.blob();
+}
+
+async function findRelease(repo, version) {
+    const base = "https://api.github.com/repos/" + repo + "/releases/";
+
+    if (version.toLowerCase() === "latest") {
+        const response = await fetch(base + "latest");
+        if (!response.ok) throw new Error("GitHub ответил " + response.status);
+        return response.json();
+    }
+
+    for (const tag of [version, "v" + version]) {
+        const response = await fetch(base + "tags/" + encodeURIComponent(tag));
+        if (response.ok) return response.json();
+        if (response.status !== 404) throw new Error("GitHub ответил " + response.status);
+    }
+
+    return null;
+}
+
+async function download(project, version, filter) {
     const repo = project.includes("/") ? project : KNOWN_PROJECTS[project.toLowerCase()];
 
     if (!repo) {
@@ -251,23 +333,17 @@ async function download(project, version) {
         return;
     }
 
-    const api = "https://api.github.com/repos/" + repo + "/releases/" +
-        (version.toLowerCase() === "latest" ? "latest" : "tags/" + encodeURIComponent(version));
-
     addLine("Ищу " + repo + " (" + version + ")...", "info");
 
     try {
-        const response = await fetch(api);
+        const release = await findRelease(repo, version);
 
-        if (response.status === 404) {
+        if (!release) {
             addLine("Версия не найдена: " + version, "error");
             return;
         }
-        if (!response.ok) throw new Error("GitHub ответил " + response.status);
 
-        const release = await response.json();
         const assets = release.assets || [];
-
         addLine("Версия: " + release.tag_name, "info");
 
         if (!assets.length) {
@@ -275,21 +351,36 @@ async function download(project, version) {
             return;
         }
 
-        assets.forEach(asset => addLine("• " + asset.name + " — " + formatSize(asset.size) + "\n  " + asset.browser_download_url, "output"));
+        const portable = assets.filter(a => !/win/i.test(a.name));
+        const target = filter
+            ? assets.find(a => a.name.toLowerCase().includes(filter.toLowerCase()))
+            : (portable[0] || assets[0]);
 
-        const target = assets.find(a => /win/i.test(a.name)) || assets[0];
-        addLine("Скачиваю: " + target.name, "info");
+        if (!target) {
+            addLine("Нет файла с «" + filter + "». Доступны: " + assets.map(a => a.name).join(", "), "error");
+            return;
+        }
 
-        const file = await fetch(target.browser_download_url);
-        if (!file.ok) throw new Error("файл не скачался (" + file.status + ")");
+        addLine("Скачиваю: " + target.name + " (" + formatSize(target.size) + ")", "info");
 
-        const blob = await file.blob();
-        files.set(target.name, new File([blob], target.name, { type: blob.type }));
+        const blob = await getBinary(target.browser_download_url);
 
-        addLine("Готово. Характеристики: view set -" + target.name, "info");
-        addLine("Запуск дампера внутри терминала пока не поддерживается: нужен .NET.", "input");
+        if (blob.size !== target.size) {
+            throw new Error("файл скачался не полностью (" + blob.size + " из " + target.size + " байт)");
+        }
+
+        const file = new File([blob], target.name, { type: "application/zip" });
+        files.set(target.name, file);
+
+        try {
+            await saveStored(file);
+        } catch (error) {
+            addLine("Файл скачан, но не сохранится после перезапуска.", "input");
+        }
+
+        addLine("Готово: " + target.name + "\nХарактеристики: view set -" + target.name, "info");
     } catch (error) {
-        addLine("Ошибка загрузки: " + error.message + ". Ссылки на файлы выше можно открыть вручную.", "error");
+        addLine("Ошибка загрузки: " + error.message, "error");
     }
 }
 
@@ -304,7 +395,8 @@ const HELP = [
     "run — запустить код из редактора",
     "file view — выбрать и посмотреть файл",
     "view set -имя — все характеристики файла",
-    "download Il2CppDumper GitHub/version = latest — скачать релиз с GitHub",
+    "download Il2CppDumper GitHub/version = latest — скачать релиз с GitHub и сохранить",
+    "  (в конце можно добавить часть имени файла, например net7)",
     "",
     "Язык Dedrix:",
     'txt("Привет")  txt1/txt2/txt3 — крупный, средний, мелкий текст',
@@ -329,9 +421,9 @@ function handleCommand(raw) {
     const view = cmd.match(/^view\s+set(?:\s+-?(.+))?$/i);
     if (view) return viewSet(view[1] || "");
 
-    const dl = cmd.match(/^download\s+(\S+)\s+github\s*\/\s*version\s*=\s*(\S+)$/i)
-        || (cmd.match(/^download\s+github\s+(\S+)\s+version\s*=\s*(\S+)$/i));
-    if (dl) return download(dl[1], dl[2]);
+    const dl = cmd.match(/^download\s+(\S+)\s+github\s*\/\s*version\s*=\s*(\S+)(?:\s+(\S+))?$/i)
+        || (cmd.match(/^download\s+github\s+(\S+)\s+version\s*=\s*(\S+)(?:\s+(\S+))?$/i));
+    if (dl) return download(dl[1], dl[2], dl[3]);
 
     try {
         executeDedrixLine(cmd);
@@ -398,3 +490,4 @@ window.Dedrix = { run: runDedrix, execute: executeDedrixLine, variables };
 
 addLine("Dedrix Terminal " + VERSION + " — напиши help", "info");
 input.focus();
+loadStored();

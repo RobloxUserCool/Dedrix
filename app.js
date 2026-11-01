@@ -1,6 +1,6 @@
 "use strict";
 
-const VERSION = "0.2";
+const VERSION = "0.3";
 
 const term = document.getElementById("terminal");
 const input = document.getElementById("input");
@@ -384,6 +384,77 @@ async function download(project, version, filter) {
     }
 }
 
+/* ---------- мост к Termux ---------- */
+
+const HELPER = "http://127.0.0.1:8765/";
+
+function getKey() {
+    try { return localStorage.getItem("dedrixKey") || ""; } catch (error) { return ""; }
+}
+
+async function termuxCall(path, params, key) {
+    const url = HELPER + path + "?" + new URLSearchParams(Object.assign({ key: key || getKey() }, params));
+    const http = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp;
+    let status;
+    let text;
+
+    try {
+        if (http) {
+            const response = await http.request({ url, method: "GET", connectTimeout: 5000, readTimeout: 600000 });
+            status = response.status;
+            text = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+        } else {
+            const response = await fetch(url);
+            status = response.status;
+            text = await response.text();
+        }
+    } catch (error) {
+        throw new Error("Не удалось связаться с Termux (" + error.message + "). Запущен ли помощник? В Termux: python ~/dedrix/helper.py");
+    }
+
+    if (status >= 400) throw new Error(text);
+    return text;
+}
+
+async function termux(args) {
+    const parts = args.trim().split(/\s+/);
+    const action = (parts[0] || "").toLowerCase();
+
+    try {
+        if (action === "connect") {
+            if (!parts[1]) throw new Error("Напиши ключ: termux connect КЛЮЧ");
+            const answer = await termuxCall("ping", {}, parts[1]);
+            try { localStorage.setItem("dedrixKey", parts[1]); } catch (error) { /* ключ не сохранится */ }
+            addLine(answer, "info");
+        } else if (action === "install") {
+            addLine("Termux скачивает дампер...", "info");
+            addLine(await termuxCall("install", { filter: parts[1] || "" }), "info");
+        } else if (action === "" || action === "status") {
+            addLine(await termuxCall("ping", {}), "info");
+        } else {
+            addLine("Неизвестная команда termux. Есть: connect КЛЮЧ, install, status", "error");
+        }
+    } catch (error) {
+        addLine(error.message, "error");
+    }
+}
+
+async function dumpGame(args) {
+    const paths = Array.from(args.matchAll(/"([^"]*)"|(\S+)/g), m => m[1] !== undefined ? m[1] : m[2]);
+
+    if (paths.length !== 2) {
+        addLine('Формат: dump путь/к/libil2cpp.so путь/к/global-metadata.dat\n(пути с пробелами — в кавычках)', "error");
+        return;
+    }
+
+    try {
+        addLine("Termux запускает дампер, это может занять минуту...", "info");
+        addLine(await termuxCall("dump", { so: paths[0], meta: paths[1] }), "info");
+    } catch (error) {
+        addLine(error.message, "error");
+    }
+}
+
 /* ---------- команды терминала ---------- */
 
 const HELP = [
@@ -397,6 +468,9 @@ const HELP = [
     "view set -имя — все характеристики файла",
     "download Il2CppDumper GitHub/version = latest — скачать релиз с GitHub и сохранить",
     "  (в конце можно добавить часть имени файла, например net7)",
+    "termux connect КЛЮЧ — подключиться к помощнику в Termux",
+    "termux install — установить дампер в Termux",
+    "dump путь.so путь.dat — запустить дампер на файлах игры",
     "",
     "Язык Dedrix:",
     'txt("Привет")  txt1/txt2/txt3 — крупный, средний, мелкий текст',
@@ -424,6 +498,12 @@ function handleCommand(raw) {
     const dl = cmd.match(/^download\s+(\S+)\s+github\s*\/\s*version\s*=\s*(\S+)(?:\s+(\S+))?$/i)
         || (cmd.match(/^download\s+github\s+(\S+)\s+version\s*=\s*(\S+)(?:\s+(\S+))?$/i));
     if (dl) return download(dl[1], dl[2], dl[3]);
+
+    const tx = cmd.match(/^termux(?:\s+(.*))?$/i);
+    if (tx) return termux(tx[1] || "");
+
+    const dp = cmd.match(/^dump\s+(.+)$/i);
+    if (dp) return dumpGame(dp[1]);
 
     try {
         executeDedrixLine(cmd);

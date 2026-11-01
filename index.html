@@ -2,502 +2,150 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#101216">
-<title>Dedrix</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0f12">
+<title>Dedrix Terminal</title>
 <style>
 * { box-sizing: border-box; }
 
 :root {
     color-scheme: dark;
-    --bg: #101216;
-    --panel: #171a20;
-    --line: #292d35;
-    --text: #d5d8df;
-    --muted: #858b96;
-    --green: #a3c9a5;
-    --blue: #91b9dc;
+    --bg: #0e0f12;
+    --panel: #15171c;
+    --line: #23262e;
+    --text: #d7dae0;
+    --muted: #6d7380;
+    --accent: #7aa2ff;
+    --ok: #8fe3a4;
+    --warn: #e8c46a;
+    --error: #ff6b6b;
+    --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;
 }
 
 html, body {
-    margin: 0;
-    width: 100%;
     height: 100%;
+    margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: "Roboto", "Arial", sans-serif;
+    font-family: var(--mono);
+    font-weight: 300;
 }
 
 body {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-header {
-    height: 43px;
-    min-height: 43px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 13px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--line);
-}
-
-.brand {
-    font-size: 15px;
-    font-weight: 400;
-    letter-spacing: 1.8px;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: .5px;
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-}
-
-.toolbar {
-    min-height: 39px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 9px;
-    background: #13161b;
-    border-bottom: 1px solid var(--line);
-}
-
-.tool {
-    border: 0;
-    background: transparent;
-    color: #aeb4bf;
-    padding: 7px 10px;
-    font-size: 11px;
-    letter-spacing: .7px;
-    font-family: inherit;
-}
-
-.tool:active { background: #292e37; }
-.tool.active { color: var(--green); }
-
-main {
+#terminal {
     flex: 1;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-.terminal {
-    flex: 1;
-    min-height: 0;
     overflow-y: auto;
-    padding: 13px 12px 8px;
-    font-family: "Roboto Mono", "Courier New", monospace;
-    font-size: 13px;
-    line-height: 1.65;
-    letter-spacing: .15px;
-    overflow-wrap: anywhere;
+    padding: 14px 16px 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-overflow-scrolling: touch;
 }
 
-.line {
-    white-space: pre-wrap;
-    min-height: 21px;
-}
+.line { white-space: pre-wrap; overflow-wrap: anywhere; }
+.line.input { color: var(--muted); }
+.line.info { color: var(--accent); }
+.line.prompt { color: var(--warn); }
+.line.preview { color: var(--ok); }
+.line.error { color: var(--error); }
+.line.size1 { font-size: 26px; line-height: 1.3; margin: 6px 0; }
+.line.size2 { font-size: 19px; line-height: 1.35; margin: 4px 0; }
+.line.size3 { font-size: 15px; }
 
-.prompt { color: var(--green); }
-.command { color: #e0e3e9; }
-.output { color: #c1c6cf; }
-.muted { color: var(--muted); }
-.error { color: #d98c8c; }
-
-.editor-panel {
-    display: none;
-    flex-direction: column;
-    height: 43%;
-    min-height: 150px;
-    border-top: 1px solid var(--line);
-    background: #111419;
-}
-
-.editor-panel.visible { display: flex; }
-
-.editor-head {
-    height: 34px;
-    min-height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 11px;
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: .7px;
-    border-bottom: 1px solid var(--line);
-}
-
-.editor {
-    flex: 1;
-    width: 100%;
-    min-height: 0;
-    resize: none;
-    border: 0;
-    outline: none;
-    padding: 11px;
-    background: #111419;
-    color: #d5dce6;
-    font-family: "Roboto Mono", "Courier New", monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    tab-size: 4;
-}
-
-.input-area {
+#prompt-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 12px;
-    background: #171a20;
+    padding: 10px 16px;
     border-top: 1px solid var(--line);
+    background: var(--panel);
 }
 
-.input-prompt {
-    color: var(--green);
-    font-family: monospace;
-    font-size: 14px;
-    white-space: nowrap;
-}
+#prompt-row span { color: var(--accent); }
 
-#commandInput {
+#input {
     flex: 1;
     min-width: 0;
-    border: 0;
-    outline: 0;
     background: transparent;
-    color: #e0e3e9;
-    font-family: "Roboto Mono", "Courier New", monospace;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 15px;
+}
+
+#editor {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    background: var(--bg);
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+
+#editor.open { display: flex; }
+
+#editor-text {
+    flex: 1;
+    width: 100%;
+    resize: none;
+    background: var(--bg);
+    color: var(--text);
+    border: none;
+    outline: none;
+    padding: 16px;
+    font: inherit;
     font-size: 14px;
-    padding: 5px 0;
-    caret-color: var(--green);
+    line-height: 1.5;
 }
 
-#commandInput::placeholder { color: #656c78; }
-
-.send {
-    border: 0;
-    background: transparent;
-    color: var(--green);
-    font-size: 17px;
-    padding: 5px 8px;
-}
-
-.keyboard-row {
+#editor-bar {
     display: flex;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 5px 7px;
-    background: #171a20;
+    gap: 10px;
+    padding: 10px 16px;
     border-top: 1px solid var(--line);
+    background: var(--panel);
 }
 
-.key {
-    flex: 0 0 auto;
-    min-width: 34px;
-    height: 29px;
-    border: 1px solid #343943;
-    border-radius: 4px;
-    background: #20242b;
-    color: #b8bec8;
-    font-family: monospace;
-    font-size: 11px;
+#editor-bar button {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 9px 16px;
+    font: inherit;
+    font-size: 14px;
 }
 
-.key:active { background: #343b46; }
-
-@media (max-height: 500px) {
-    .editor-panel { height: 35%; }
-}
+#editor-bar button:active { background: var(--line); }
+#editor-bar button:focus-visible, #input:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+#editor-run { border-color: var(--accent) !important; color: var(--accent) !important; }
 </style>
 </head>
-
 <body>
 
-<header>
-    <div class="brand">DEDRIX</div>
-    <div class="header-right">
-        <span>TERMINAL</span>
-        <span class="status-dot"></span>
+<div id="terminal"></div>
+
+<div id="prompt-row">
+    <span>&gt;</span>
+    <input id="input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Команда">
+</div>
+
+<div id="editor">
+    <textarea id="editor-text" spellcheck="false" aria-label="Редактор Dedrix"></textarea>
+    <div id="editor-bar">
+        <button id="editor-run" type="button">Запустить</button>
+        <button id="editor-close" type="button">Закрыть</button>
     </div>
-</header>
-
-<div class="toolbar">
-    <button class="tool active" id="terminalButton" onclick="showTerminal()">TERMINAL</button>
-    <button class="tool" id="editorButton" onclick="toggleEditor()">EDITOR</button>
-    <button class="tool" onclick="runEditor()">RUN</button>
-    <button class="tool" onclick="clearTerminal()">CLEAR</button>
 </div>
 
-<main>
-    <div class="terminal" id="terminal"></div>
+<input id="file-input" type="file" multiple hidden>
 
-    <section class="editor-panel" id="editorPanel">
-        <div class="editor-head">
-            <span>main.dedrix</span>
-            <span>EDITOR</span>
-        </div>
-        <textarea
-            class="editor"
-            id="code"
-            spellcheck="false"
-            autocapitalize="off"
-            autocomplete="off"
-            autocorrect="off"
-            placeholder="Код Dedrix..."
-        ></textarea>
-    </section>
-</main>
-
-<div class="input-area">
-    <span class="input-prompt">~ $</span>
-    <input
-        id="commandInput"
-        type="text"
-        placeholder="Введите команду"
-        autocomplete="off"
-        autocapitalize="off"
-        spellcheck="false"
-    >
-    <button class="send" onclick="submitCommand()">↵</button>
-</div>
-
-<div class="keyboard-row">
-    <button class="key" onclick="insertKey('ESC')">ESC</button>
-    <button class="key" onclick="insertKey('TAB')">TAB</button>
-    <button class="key" onclick="insertKey('CTRL')">CTRL</button>
-    <button class="key" onclick="insertKey('ALT')">ALT</button>
-    <button class="key" onclick="insertKey('↑')">↑</button>
-    <button class="key" onclick="insertKey('↓')">↓</button>
-    <button class="key" onclick="insertKey('←')">←</button>
-    <button class="key" onclick="insertKey('→')">→</button>
-    <button class="key" onclick="insertKey('/')">/</button>
-    <button class="key" onclick="insertKey('-')">-</button>
-</div>
-
-<script src="./app.js"></script>
-
-<script>
-const terminal = document.getElementById("terminal");
-const commandInput = document.getElementById("commandInput");
-const editorPanel = document.getElementById("editorPanel");
-const editor = document.getElementById("code");
-
-let history = [];
-let historyIndex = 0;
-
-function addLine(text, type = "output") {
-    const line = document.createElement("div");
-    line.className = "line " + type;
-    line.textContent = String(text);
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
-}
-
-function addCommand(text) {
-    const line = document.createElement("div");
-    line.className = "line";
-
-    const prompt = document.createElement("span");
-    prompt.className = "prompt";
-    prompt.textContent = "~ $ ";
-
-    const command = document.createElement("span");
-    command.className = "command";
-    command.textContent = text;
-
-    line.append(prompt, command);
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
-}
-
-function submitCommand() {
-    const value = commandInput.value.trim();
-    if (!value) return;
-
-    addCommand(value);
-    history.push(value);
-    historyIndex = history.length;
-    commandInput.value = "";
-
-    if (["clear", "help", "version", "edit", "run"].includes(value)) {
-        executeSystemCommand(value);
-        return;
-    }
-
-    try {
-        if (!window.Dedrix) {
-            throw new Error("Интерпретатор Dedrix не загружен");
-        }
-        window.Dedrix.execute(value);
-    } catch (error) {
-        addLine(error.message, "error");
-    }
-}
-
-function executeSystemCommand(command) {
-    if (command === "clear") {
-        clearTerminal();
-        return;
-    }
-
-    if (command === "help") {
-        addLine("Команды терминала:");
-        addLine("help     — справка");
-        addLine("clear    — очистить терминал");
-        addLine("version  — версия Dedrix");
-        addLine("edit     — открыть редактор");
-        addLine("run      — выполнить код");
-        addLine("");
-        addLine("Язык Dedrix:");
-        addLine('txt("текст") — вывести текст');
-        addLine("txt(123)    — вывести число");
-        addLine("name = value — создать переменную");
-        addLine("txt(name)   — вывести переменную");
-        return;
-    }
-
-    if (command === "version") {
-        addLine("Dedrix 0.1.0");
-        return;
-    }
-
-    if (command === "edit") {
-        toggleEditor(true);
-        return;
-    }
-
-    if (command === "run") {
-        runEditor();
-    }
-}
-
-function clearTerminal() {
-    terminal.innerHTML = "";
-}
-
-function showTerminal() {
-    editorPanel.classList.remove("visible");
-    document.getElementById("editorButton").classList.remove("active");
-    document.getElementById("terminalButton").classList.add("active");
-    commandInput.focus();
-}
-
-function toggleEditor(forceOpen = false) {
-    const open = forceOpen || !editorPanel.classList.contains("visible");
-    editorPanel.classList.toggle("visible", open);
-
-    document.getElementById("editorButton").classList.toggle("active", open);
-    document.getElementById("terminalButton").classList.toggle("active", !open);
-}
-
-function runEditor() {
-    const source = editor.value;
-
-    addLine("Запуск main.dedrix", "muted");
-
-    if (!window.Dedrix) {
-        addLine("Интерпретатор Dedrix не загружен", "error");
-        return;
-    }
-
-    window.Dedrix.run(source);
-    addLine("Выполнение завершено", "muted");
-}
-
-function insertKey(key) {
-    commandInput.focus();
-
-    if (key === "ESC") {
-        commandInput.value = "";
-        return;
-    }
-
-    if (key === "TAB") {
-        const start = commandInput.selectionStart;
-        const end = commandInput.selectionEnd;
-        const value = commandInput.value;
-
-        commandInput.value =
-            value.slice(0, start) + "    " + value.slice(end);
-
-        commandInput.setSelectionRange(start + 4, start + 4);
-        return;
-    }
-
-    if (["CTRL", "ALT", "↑", "↓", "←", "→"].includes(key)) return;
-
-    const start = commandInput.selectionStart;
-    const end = commandInput.selectionEnd;
-    const value = commandInput.value;
-
-    commandInput.value =
-        value.slice(0, start) + key + value.slice(end);
-
-    commandInput.setSelectionRange(
-        start + key.length,
-        start + key.length
-    );
-}
-
-commandInput.addEventListener("keydown", event => {
-    if (event.key === "Enter") {
-        submitCommand();
-    }
-
-    if (event.key === "ArrowUp") {
-        event.preventDefault();
-
-        if (historyIndex > 0) {
-            historyIndex--;
-            commandInput.value = history[historyIndex];
-        }
-    }
-
-    if (event.key === "ArrowDown") {
-        event.preventDefault();
-
-        if (historyIndex < history.length - 1) {
-            historyIndex++;
-            commandInput.value = history[historyIndex];
-        } else {
-            historyIndex = history.length;
-            commandInput.value = "";
-        }
-    }
-
-    if (event.key === "Tab") {
-        event.preventDefault();
-
-        const start = commandInput.selectionStart;
-        const end = commandInput.selectionEnd;
-
-        commandInput.value =
-            commandInput.value.slice(0, start) +
-            "    " +
-            commandInput.value.slice(end);
-
-        commandInput.setSelectionRange(start + 4, start + 4);
-    }
-});
-</script>
-
+<script src="app.js"></script>
 </body>
 </html>
